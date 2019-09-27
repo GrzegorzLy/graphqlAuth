@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import express from 'express';
 import { ApolloServer } from 'apollo-server-express';
 import { buildSchema } from 'type-graphql';
-
+import cors from 'cors';
 import { UserResolver } from './UserResolver';
 import { createConnection } from 'typeorm';
 import cookieParser from 'cookie-parser';
@@ -13,6 +13,12 @@ const port = 4000;
 (async () => {
 	const app = express();
 	app.use(cookieParser());
+	app.use(
+		cors({
+			origin: 'http://localhost:3000',
+			credentials: true,
+		}),
+	);
 	app.get('/', (_, res) => res.send('helllllllo'));
 
 	app.post('/refresh_token', async (req, res) => {
@@ -43,7 +49,7 @@ const port = 4000;
 		}),
 		context: ({ req, res }) => ({ req, res }),
 	});
-	apolloServer.applyMiddleware({ app });
+	apolloServer.applyMiddleware({ app, cors: false });
 
 	app.listen(port, () => {
 		console.log(`express server started at port ${port}`);

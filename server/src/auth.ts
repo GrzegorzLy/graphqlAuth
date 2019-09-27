@@ -11,5 +11,5 @@ export const createRefreshToken = (user: User) =>
 export const verifyAccessToken = (token: string) => verify(token, process.env.ACCESS_TOKEN_SECRET!);
 export const verifyRefreshToken = (token: string) => verify(token, process.env.REFRESH_TOKEN_SECRET!);
 
-export const sendRefreshToken = (res: Response, user: User) =>
-	res.cookie('jid', createRefreshToken(user), { httpOnly: true });
+export const sendRefreshToken = (res: Response, token: string) =>
+	res.cookie('jid', token, { httpOnly: true, path: '/refresh_token' });

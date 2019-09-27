@@ -9,7 +9,6 @@ export const isAuth: MiddlewareFn<MyContext> = ({ context }, next) => {
 	}
 	try {
 		const token = authorization.split(' ')[1];
-		verifyAccessToken;
 		const payload = verifyAccessToken(token);
 		context.payload = payload as any;
 	} catch (err) {

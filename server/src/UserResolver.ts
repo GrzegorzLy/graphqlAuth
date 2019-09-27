@@ -3,7 +3,7 @@ import { Resolver, Query, Mutation, Arg, ObjectType, Field, Ctx, UseMiddleware, 
 import { User } from './entity/User';
 import { hash, compare } from 'bcryptjs';
 import { MyContext } from './MyContext';
-import { createAccessToken, sendRefreshToken } from './auth';
+import { createAccessToken, sendRefreshToken, verifyAccessToken, createRefreshToken } from './auth';
 import { isAuth } from './isAuth';
 import { getConnection } from 'typeorm';
 
@@ -27,8 +27,24 @@ export class UserResolver {
 	}
 
 	@Query(() => [ User ])
+	@UseMiddleware(isAuth)
 	users() {
 		return User.find();
+	}
+
+	@Query(() => User, { nullable: true })
+	me(@Ctx() context: MyContext) {
+		const authorization = context.req.headers['authorization'];
+		if (!authorization) {
+			return null;
+		}
+		try {
+			const token = authorization.split(' ')[1];
+			const payload: any = verifyAccessToken(token);
+			return User.findOne(payload.userId);
+		} catch (err) {
+			return null;
+		}
 	}
 
 	@Mutation(() => Boolean)
@@ -37,6 +53,12 @@ export class UserResolver {
 		userId: number,
 	) {
 		await getConnection().getRepository(User).increment({ id: userId }, 'tokenVersion', 1);
+		return true;
+	}
+
+	@Mutation(() => Boolean)
+	async logout(@Ctx() { res }: MyContext) {
+		sendRefreshToken(res, '');
 		return true;
 	}
 
@@ -54,8 +76,7 @@ export class UserResolver {
 		if (!valid) {
 			throw new Error('authentication failed!');
 		}
-
-		sendRefreshToken(res, user);
+		sendRefreshToken(res, createRefreshToken(user));
 		return {
 			accessToken: createAccessToken(user),
 		};
