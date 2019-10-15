@@ -6,7 +6,7 @@ import cors from 'cors';
 import { UserResolver } from './UserResolver';
 import { createConnection } from 'typeorm';
 import cookieParser from 'cookie-parser';
-import { verifyRefreshToken, createAccessToken, sendRefreshToken } from './auth';
+import { verifyRefreshToken, createAccessToken, sendRefreshToken, createRefreshToken } from './auth';
 import { User } from './entity/User';
 
 const port = 4000;
@@ -33,7 +33,7 @@ const port = 4000;
 			if (!user || user.tokenVersion !== tokenVersion) {
 				return res.send({ ok: false, accessToken: '' });
 			}
-			sendRefreshToken(res, user);
+			sendRefreshToken(res, createRefreshToken(user));
 			return res.send({ ok: true, accessToken: createAccessToken(user) });
 		} catch (err) {
 			console.log(err);
